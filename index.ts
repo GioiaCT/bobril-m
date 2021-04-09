@@ -20,3 +20,4 @@ export * from "./src/popover";
 export * from "./src/subheader";
 export * from "./src/iconButton";
 export * from "./src/spacer";
+export * from "./src/table"

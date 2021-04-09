@@ -1,6 +1,7 @@
 import * as b from "bobril";
 import * as m from "./index";
 import * as icons from "bobril-m-icons";
+import { getTablePreview } from "./tableExample";
 
 m.initRobotoFonts();
 
@@ -621,7 +622,8 @@ function createNavigation(): b.IBobrilNode {
             createNavigationItem("Paper", getPaperPreview),
             createNavigationItem("Radio Button", getRadioButtonPreview),
             createNavigationItem("Slider", getSliderPreview),
-            createNavigationItem("Text Field", getTextFieldPreview)
+            createNavigationItem("Text Field", getTextFieldPreview),
+            createNavigationItem("Table",getTablePreview)
         ])
     );
 }
