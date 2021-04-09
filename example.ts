@@ -1,6 +1,7 @@
 import * as b from "bobril";
 import * as m from "./index";
 import * as icons from "bobril-m-icons";
+import { Typographytype } from "./src/typography";
 
 m.initRobotoFonts();
 
@@ -587,6 +588,18 @@ function getPaperPreview(): b.IBobrilChildren {
     ];
 }
 
+function getTypographyPreview(): b.IBobrilChildren {
+    return [
+        m.Paper({ zDepth: 0, style: { margin: 16, padding: 8 } }, [
+            m.Typography({tag: Typographytype.h1, children: "h1. Header"}),
+            m.Typography({tag: Typographytype.h2, children: "h2. Header"}),
+            m.Typography({tag: Typographytype.h3, children: "h3. Header"}),
+            m.Typography({tag: Typographytype.h4, children: "h4. Header"}),
+            m.Typography({tag: Typographytype.h5, children: "h5. Header"}),
+            m.Typography({tag: Typographytype.h6, children: "h6. Header"})
+    ])]
+}
+
 function createNavigationItem(
     text: string,
     contentCallback: () => b.IBobrilChildren
@@ -621,7 +634,8 @@ function createNavigation(): b.IBobrilNode {
             createNavigationItem("Paper", getPaperPreview),
             createNavigationItem("Radio Button", getRadioButtonPreview),
             createNavigationItem("Slider", getSliderPreview),
-            createNavigationItem("Text Field", getTextFieldPreview)
+            createNavigationItem("Text Field", getTextFieldPreview),
+            createNavigationItem("Typography", getTypographyPreview),
         ])
     );
 }
