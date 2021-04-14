@@ -52,7 +52,7 @@ export function getTablePreview(): b.IBobrilChildren {
                     m.TableRow({
                          children: [
                              m.TableCell({ children: "typescript" }), 
-                             m.TableCell({hyperlink: true, children: "https://www.typescriptlang.org"}),
+                             m.TableCell({ children: "https://www.typescriptlang.org"}),
                              m.TableCell({ children: "language"}),
                             ]
                         }),
@@ -150,6 +150,7 @@ export function getTablePreview(): b.IBobrilChildren {
                 ]})),
             m.TableFooter({
                 children : m.TablePagination({
+                    
                     rowsPerPage: 3,
                     page: () => 0,
                     count: rows.length,

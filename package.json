@@ -10,7 +10,9 @@
         "main": "index.ts"
     },
     "prettier": {
-        "tabWidth": 4
+        "printWidth": 140,
+        "tabWidth": 4,
+        "parser": "typescript"
     },
     "bobril": {
         "title": "Bobril Material",
