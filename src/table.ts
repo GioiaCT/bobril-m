@@ -1,6 +1,5 @@
 import * as b from "bobril";
 import * as m from "../index";
-import { Button } from "./button";
 import * as Icon from "bobril-m-icons";
 import { IconButton } from "./iconButton";
 
@@ -33,6 +32,7 @@ interface ITableData {
 }
 
 interface ITableHeaderCellData {
+    sort?: { onChange(value: TableCellSortingType): void; direction?: TableCellSortingType };
     children: b.IBobrilChildren;
     style?: b.IBobrilStyles;
     colSpan?: number;
@@ -56,13 +56,28 @@ interface ITableCtx extends b.BobrilCtx<ITableData> {
     data: ITableData;
 }
 
-interface ICtx extends b.BobrilCtx<ITableHeaderCellData> {
+export type TableCellSortingType = "asc" | "desc";
+
+interface IHeaderCellCtx extends b.BobrilCtx<ITableHeaderCellData> {
+    active: boolean;
+    defaultDirection: TableCellSortingType;
     data: ITableHeaderCellData;
 }
 
 interface ITableRowCtx extends b.BobrilCtx<ITableRowData> {
     data: ITableRowData;
     hover: boolean;
+}
+
+interface ITableSortData {
+    children?: b.IBobrilChildren;
+    direction: TableCellSortingType;
+    hideSortIcon?: boolean;
+    style?: b.IBobrilStyles;
+}
+
+interface ITableSortCtx extends b.BobrilCtx<ITableSortData> {
+    data: ITableSortData;
 }
 
 function backButtonAction(ctx: ITablePaginationCtx) {
@@ -93,10 +108,49 @@ export const TableHead = b.createVirtualComponent({
 });
 
 export const TableHeaderCell = b.createComponent<ITableHeaderCellData>({
-    render(ctx: ICtx, me: b.IBobrilNode) {
+    init(ctx: IHeaderCellCtx, _me: b.IBobrilCacheNode): void {
+        ctx.active = false;
+        ctx.defaultDirection = "asc";
+    },
+    render(ctx: IHeaderCellCtx, me: b.IBobrilNode) {
         me.tag = "th";
-        me.children = { attrs: { colSpan: ctx.data.colSpan }, children: ctx.data.children };
+        me.attrs = { colSpan: ctx.data.colSpan };
+        me.children = [
+            ctx.data.sort !== undefined && ctx.active
+                ? TableHeaderSort({ direction: ctx.data.sort.direction || ctx.defaultDirection })
+                : undefined,
+            ctx.data.children,
+        ];
         b.style(me, tableStyleBase, ctx.data.style);
+    },
+    onMouseDown(ctx: IHeaderCellCtx) {
+        if (ctx.data.sort === undefined) {
+            return;
+        }
+
+        if (!ctx.active) {
+            ctx.active = true;
+            ctx.data.sort.onChange(ctx.defaultDirection);
+        } else {
+            ctx.data.sort.onChange(toggleSort(ctx.data.sort.direction));
+        }
+
+        b.invalidate(ctx);
+    },
+});
+
+function toggleSort(direction?: TableCellSortingType): TableCellSortingType {
+    return direction === "desc" ? "asc" : "desc";
+}
+
+export const TableHeaderSort = b.createComponent<ITableSortData>({
+    render(ctx: ITableSortCtx, me: b.IBobrilNode) {
+        b.style(me, {
+            cssFloat: "left",
+        });
+        me.children = {
+            children: ctx.data.direction === "asc" ? Icon.navigationArrowUpward() : Icon.navigationArrowDownward(),
+        };
     },
 });
 
@@ -128,7 +182,7 @@ export const TableRow = b.createComponent({
 
 export const TableCell = b.createVirtualComponent({
     render(ctx: ITableCtx, me: b.IBobrilNode) {
-        me.children = { tag: "td", attrs: { colSpan: ctx.data.colSpan }, children: ctx.data.children }; //TODO: change first tag to hyperlink tag
+        me.children = { tag: "td", attrs: { colSpan: ctx.data.colSpan }, children: ctx.data.children };
         b.style(me.children, tableStyleBase, ctx.data.style, ctx.data.type === CellType.Number && numberTypeStyle);
     },
 });
@@ -159,9 +213,8 @@ export const TablePagination = b.createVirtualComponent<ITablePaginationData>({
                         " of: ",
                         ctx.data.count,
                     ],
-                    { cssFloat: "right", marginTop: 12 }
+                    { cssFloat: "right", lineHeight: "48px" }
                 ),
-
                 /*
                     IconButton({ action: () => backButtonAction(ctx) }, Icon.hardwareKeyboardArrowLeft()),
                     IconButton({ action: () => backButtonAction(ctx) }, Icon.hardwareKeyboardArrowRight()),
