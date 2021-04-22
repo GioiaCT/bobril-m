@@ -14,29 +14,58 @@ function createData(name: string, calories: number, fat: number, carbs: number, 
     return { name, calories, fat, carbs, protein };
 }
 
-const rows = [
+let rows = [
+    createData("Oreo", 437, 18.0, 63, 4.0),
     createData("Cupcake", 305, 3.7, 67, 4.3),
     createData("Donut", 452, 25.0, 51, 4.9),
+    createData("Lollipop", 392, 0.2, 98, 0.0),
     createData("Eclair", 262, 16.0, 24, 6.0),
+    createData("Jelly Bean", 375, 0.0, 94, 0.0),
     createData("Frozen yoghurt", 159, 6.0, 24, 4.0),
     createData("Gingerbread", 356, 16.0, 49, 3.9),
     createData("Honeycomb", 408, 3.2, 87, 6.5),
     createData("Ice cream sandwich", 237, 9.0, 37, 4.3),
-    createData("Jelly Bean", 375, 0.0, 94, 0.0),
     createData("KitKat", 518, 26.0, 65, 7.0),
-    createData("Lollipop", 392, 0.2, 98, 0.0),
     createData("Marshmallow", 318, 0, 81, 2.0),
     createData("Nougat", 360, 19.0, 9, 37.0),
-    createData("Oreo", 437, 18.0, 63, 4.0),
 ];
 
-const headCells = [
-    { id: "name", numeric: false, disablePadding: true, label: "Dessert (100g serving)" },
-    { id: "calories", numeric: true, disablePadding: false, label: "Calories" },
-    { id: "fat", numeric: true, disablePadding: false, label: "Fat (g)" },
-    { id: "carbs", numeric: true, disablePadding: false, label: "Carbs (g)" },
-    { id: "protein", numeric: true, disablePadding: false, label: "Protein (g)" },
-];
+type rowsKey = keyof Data;
+
+// const headCells = [
+//     { id: "name", numeric: false, disablePadding: true, label: "Dessert (100g serving)" },
+//     { id: "calories", numeric: true, disablePadding: false, label: "Calories" },
+//     { id: "fat", numeric: true, disablePadding: false, label: "Fat (g)" },
+//     { id: "carbs", numeric: true, disablePadding: false, label: "Carbs (g)" },
+//     { id: "protein", numeric: true, disablePadding: false, label: "Protein (g)" },
+// ];
+
+function comparator<T>(a: T, b: T, orderBy: keyof T) {
+    if (b[orderBy] < a[orderBy]) {
+        return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+        return 1;
+    }
+    return 0;
+}
+
+function getComparator<Key extends keyof any>(
+    order: TableCellSortingType,
+    orderBy: Key
+): (a: { [key in Key]: number | string }, b: { [key in Key]: number | string }) => number {
+    return order === "desc" ? (a, b) => comparator(a, b, orderBy) : (a, b) => -comparator(a, b, orderBy);
+}
+
+function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
+    const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
+    stabilizedThis.sort((a, b) => {
+        const order = comparator(a[0], b[0]);
+        if (order !== 0) return order;
+        return a[1] - b[1];
+    });
+    return stabilizedThis.map((el) => el[0]);
+}
 
 let nameSortType: TableCellSortingType | undefined = undefined;
 export function getTablePreview(): b.IBobrilChildren {
@@ -140,35 +169,41 @@ export function getTablePreview(): b.IBobrilChildren {
             m.Table({
                 children: [
                     m.TableHead({
-                        children: [
-                            m.TableHeaderCell({
-                                sort: {
-                                    direction: nameSortType,
-                                    onChange: (v) => {
-                                        nameSortType = v;
-                                        b.invalidate();
-                                    },
-                                },
-                                children: ["Dessert (100g serving)"],
-                            }),
-                            m.TableHeaderCell({ children: "Calories" }),
-                            m.TableHeaderCell({ children: "Fat (g)" }),
-                            m.TableHeaderCell({ children: "Carbs (g)" }),
-                            m.TableHeaderCell({ children: "Protein (g)" }),
-                        ],
-                    }),
-                    rows.map((row) =>
-                        m.TableRow({
+                        children: m.TableRow({
                             children: [
-                                { key: row.name },
-                                m.TableCell({ children: row.name }),
-                                m.TableCell({ children: row.calories }),
-                                m.TableCell({ children: row.fat }),
-                                m.TableCell({ children: row.carbs }),
-                                m.TableCell({ children: row.protein }),
+                                m.TableHeaderCell({
+                                    sort: {
+                                        direction: nameSortType,
+                                        onChange: (v) => {
+                                            nameSortType = v;
+                                            rows = stableSort(rows, getComparator(nameSortType, "name"));
+                                            b.invalidate();
+                                        },
+                                    },
+                                    children: ["Dessert (100g serving)"],
+                                }),
+                                m.TableHeaderCell({ children: "Calories" }),
+                                m.TableHeaderCell({ children: "Fat (g)" }),
+                                m.TableHeaderCell({ children: "Carbs (g)" }),
+                                m.TableHeaderCell({ children: "Protein (g)" }),
                             ],
-                        })
-                    ),
+                        }),
+                    }),
+                    m.TableBody({
+                        children: rows.map((row) =>
+                            m.TableRow({
+                                children: [
+                                    { key: row.name },
+                                    m.TableCell({ children: row.name }),
+                                    m.TableCell({ children: row.calories }),
+                                    m.TableCell({ children: row.fat }),
+                                    m.TableCell({ children: row.carbs }),
+                                    m.TableCell({ children: row.protein }),
+                                ],
+                            })
+                        ),
+                    }),
+
                     m.TableFooter({
                         children: m.TablePagination({
                             rowsPerPage: 3,

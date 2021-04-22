@@ -3,15 +3,6 @@ import * as m from "../index";
 import * as Icon from "bobril-m-icons";
 import { IconButton } from "./iconButton";
 
-/*
-export * from "./tableHead"; done
-export * from "./tableBody"; done
-export * from "./tableRow"; done
-export * from "./tableCell"; done
-export * from "./tableHeaderCell"; done
-export * from "./tableFooter";
-export * from "./tablePagination";
-*/
 export const enum CellType {
     Number,
     String,
