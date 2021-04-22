@@ -1,6 +1,5 @@
 import * as b from "bobril";
 import * as m from "./index";
-import { TableCellSortingType } from "./index";
 
 interface Data {
     calories: number;
@@ -39,33 +38,6 @@ type rowsKey = keyof Data;
 //     { id: "carbs", numeric: true, disablePadding: false, label: "Carbs (g)" },
 //     { id: "protein", numeric: true, disablePadding: false, label: "Protein (g)" },
 // ];
-
-function comparator<T>(a: T, b: T, orderBy: keyof T) {
-    if (b[orderBy] < a[orderBy]) {
-        return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-        return 1;
-    }
-    return 0;
-}
-
-function getComparator<Key extends keyof any>(
-    order: TableCellSortingType,
-    orderBy: Key
-): (a: { [key in Key]: number | string }, b: { [key in Key]: number | string }) => number {
-    return order === "desc" ? (a, b) => comparator(a, b, orderBy) : (a, b) => -comparator(a, b, orderBy);
-}
-
-function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
-    const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
-    stabilizedThis.sort((a, b) => {
-        const order = comparator(a[0], b[0]);
-        if (order !== 0) return order;
-        return a[1] - b[1];
-    });
-    return stabilizedThis.map((el) => el[0]);
-}
 
 let nameSortType: TableCellSortingType | undefined = undefined;
 export function getTablePreview(): b.IBobrilChildren {
@@ -176,7 +148,7 @@ export function getTablePreview(): b.IBobrilChildren {
                                         direction: nameSortType,
                                         onChange: (v) => {
                                             nameSortType = v;
-                                            rows = stableSort(rows, getComparator(nameSortType, "name"));
+                                            rows = m.stableSort(rows, m.getComparator(nameSortType, "name"));
                                             b.invalidate();
                                         },
                                     },
