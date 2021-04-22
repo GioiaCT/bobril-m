@@ -1,5 +1,7 @@
 import * as b from "bobril";
+import { BobrilCtx } from "bobril";
 import * as m from "./index";
+import { TableCellSortingType } from "./index";
 
 interface Data {
     calories: number;
@@ -8,6 +10,9 @@ interface Data {
     name: string;
     protein: number;
 }
+
+const nameCollumnName = "name";
+const proteinCollumnName = "protein";
 
 function createData(name: string, calories: number, fat: number, carbs: number, protein: number): Data {
     return { name, calories, fat, carbs, protein };
@@ -39,7 +44,10 @@ type rowsKey = keyof Data;
 //     { id: "protein", numeric: true, disablePadding: false, label: "Protein (g)" },
 // ];
 
-let nameSortType: TableCellSortingType | undefined = undefined;
+let nameSortType1: TableCellSortingType | undefined = undefined;
+let nameSortType2: TableCellSortingType | undefined = undefined;
+let singleSortType: TableCellSortingType | undefined = undefined;
+let collumnName: String;
 export function getTablePreview(): b.IBobrilChildren {
     return [
         m.Paper(
@@ -145,10 +153,12 @@ export function getTablePreview(): b.IBobrilChildren {
                             children: [
                                 m.TableHeaderCell({
                                     sort: {
-                                        direction: nameSortType,
+                                        direction: singleSortType,
+                                        isActive: collumnName === nameCollumnName,
                                         onChange: (v) => {
-                                            nameSortType = v;
-                                            rows = m.stableSort(rows, m.getComparator(nameSortType, "name"));
+                                            collumnName = nameCollumnName;
+                                            singleSortType = v;
+                                            rows = m.stableSort(rows, m.getComparator(singleSortType, nameCollumnName));
                                             b.invalidate();
                                         },
                                     },
@@ -157,7 +167,19 @@ export function getTablePreview(): b.IBobrilChildren {
                                 m.TableHeaderCell({ children: "Calories" }),
                                 m.TableHeaderCell({ children: "Fat (g)" }),
                                 m.TableHeaderCell({ children: "Carbs (g)" }),
-                                m.TableHeaderCell({ children: "Protein (g)" }),
+                                m.TableHeaderCell({
+                                    sort: {
+                                        direction: singleSortType,
+                                        isActive: collumnName === proteinCollumnName,
+                                        onChange: (v) => {
+                                            collumnName = proteinCollumnName;
+                                            singleSortType = v;
+                                            rows = m.stableSort(rows, m.getComparator(singleSortType, proteinCollumnName));
+                                            b.invalidate();
+                                        },
+                                    },
+                                    children: "Protein (g)",
+                                }),
                             ],
                         }),
                     }),

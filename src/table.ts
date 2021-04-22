@@ -2,6 +2,7 @@ import * as b from "bobril";
 import * as m from "../index";
 import * as Icon from "bobril-m-icons";
 import { IconButton } from "./iconButton";
+import { IBobrilChildren } from "bobril";
 
 export const enum CellType {
     Number,
@@ -23,7 +24,7 @@ interface ITableData {
 }
 
 interface ITableHeaderCellData {
-    sort?: { onChange(value: TableCellSortingType): void; direction?: TableCellSortingType };
+    sort?: { onChange(value: TableCellSortingType): void; direction?: TableCellSortingType; isActive?: boolean };
     children: b.IBobrilChildren;
     style?: b.IBobrilStyles;
     colSpan?: number;
@@ -63,7 +64,6 @@ interface ITableRowCtx extends b.BobrilCtx<ITableRowData> {
 interface ITableSortData {
     children?: b.IBobrilChildren;
     direction: TableCellSortingType;
-    hideSortIcon?: boolean;
     style?: b.IBobrilStyles;
 }
 
@@ -107,7 +107,7 @@ export const TableHeaderCell = b.createComponent<ITableHeaderCellData>({
         me.tag = "th";
         me.attrs = { colSpan: ctx.data.colSpan };
         me.children = [
-            ctx.data.sort !== undefined && ctx.active
+            ctx.data.sort !== undefined && (ctx.data.sort.isActive === undefined ? ctx.active : ctx.data.sort.isActive)
                 ? TableHeaderSort({ direction: ctx.data.sort.direction || ctx.defaultDirection })
                 : undefined,
             ctx.data.children,
@@ -125,7 +125,6 @@ export const TableHeaderCell = b.createComponent<ITableHeaderCellData>({
         } else {
             ctx.data.sort.onChange(toggleSort(ctx.data.sort.direction));
         }
-
         b.invalidate(ctx);
     },
 });
