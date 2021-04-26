@@ -1,5 +1,4 @@
 import * as b from "bobril";
-import { BobrilCtx } from "bobril";
 import * as m from "./index";
 import { TableCellSortingType } from "./index";
 
@@ -12,13 +11,13 @@ interface Data {
 }
 
 const nameCollumnName = "name";
-const proteinCollumnName = "protein";
+const caloriesCollumnName = "calories";
 
 function createData(name: string, calories: number, fat: number, carbs: number, protein: number): Data {
     return { name, calories, fat, carbs, protein };
 }
 
-let rows = [
+let rowsData = [
     createData("Oreo", 437, 18.0, 63, 4.0),
     createData("Cupcake", 305, 3.7, 67, 4.3),
     createData("Donut", 452, 25.0, 51, 4.9),
@@ -34,18 +33,6 @@ let rows = [
     createData("Nougat", 360, 19.0, 9, 37.0),
 ];
 
-type rowsKey = keyof Data;
-
-// const headCells = [
-//     { id: "name", numeric: false, disablePadding: true, label: "Dessert (100g serving)" },
-//     { id: "calories", numeric: true, disablePadding: false, label: "Calories" },
-//     { id: "fat", numeric: true, disablePadding: false, label: "Fat (g)" },
-//     { id: "carbs", numeric: true, disablePadding: false, label: "Carbs (g)" },
-//     { id: "protein", numeric: true, disablePadding: false, label: "Protein (g)" },
-// ];
-
-let nameSortType1: TableCellSortingType | undefined = undefined;
-let nameSortType2: TableCellSortingType | undefined = undefined;
 let singleSortType: TableCellSortingType | undefined = undefined;
 let collumnName: String;
 export function getTablePreview(): b.IBobrilChildren {
@@ -147,66 +134,58 @@ export function getTablePreview(): b.IBobrilChildren {
         ),
         m.Paper({ style: { margin: 16, padding: 8 } }, [
             m.Table({
-                children: [
-                    m.TableHead({
-                        children: m.TableRow({
-                            children: [
-                                m.TableHeaderCell({
-                                    sort: {
-                                        direction: singleSortType,
-                                        isActive: collumnName === nameCollumnName,
-                                        onChange: (v) => {
-                                            collumnName = nameCollumnName;
-                                            singleSortType = v;
-                                            rows = m.stableSort(rows, m.getComparator(singleSortType, nameCollumnName));
-                                            b.invalidate();
-                                        },
-                                    },
-                                    children: ["Dessert (100g serving)"],
-                                }),
-                                m.TableHeaderCell({ children: "Calories" }),
-                                m.TableHeaderCell({ children: "Fat (g)" }),
-                                m.TableHeaderCell({ children: "Carbs (g)" }),
-                                m.TableHeaderCell({
-                                    sort: {
-                                        direction: singleSortType,
-                                        isActive: collumnName === proteinCollumnName,
-                                        onChange: (v) => {
-                                            collumnName = proteinCollumnName;
-                                            singleSortType = v;
-                                            rows = m.stableSort(rows, m.getComparator(singleSortType, proteinCollumnName));
-                                            b.invalidate();
-                                        },
-                                    },
-                                    children: "Protein (g)",
-                                }),
-                            ],
-                        }),
-                    }),
-                    m.TableBody({
-                        children: rows.map((row) =>
-                            m.TableRow({
-                                children: [
-                                    { key: row.name },
-                                    m.TableCell({ children: row.name }),
-                                    m.TableCell({ children: row.calories }),
-                                    m.TableCell({ children: row.fat }),
-                                    m.TableCell({ children: row.carbs }),
-                                    m.TableCell({ children: row.protein }),
-                                ],
-                            })
-                        ),
-                    }),
-
-                    m.TableFooter({
-                        children: m.TablePagination({
-                            rowsPerPage: 3,
-                            page: () => 0,
-                            count: rows.length,
-                            colSpan: 5,
-                        }),
-                    }),
-                ],
+                header: {
+                    columns: [
+                        {
+                            sort: {
+                                direction: singleSortType,
+                                isActive: collumnName === nameCollumnName,
+                                onChange: (v) => {
+                                    collumnName = nameCollumnName;
+                                    singleSortType = v;
+                                    rowsData = m.stableSort(rowsData, m.getComparator(singleSortType, nameCollumnName));
+                                    b.invalidate();
+                                },
+                            },
+                            children: ["Dessert (100g serving)"],
+                        },
+                        {
+                            sort: {
+                                direction: singleSortType,
+                                isActive: collumnName === caloriesCollumnName,
+                                onChange: (v) => {
+                                    collumnName = caloriesCollumnName;
+                                    singleSortType = v;
+                                    rowsData = m.stableSort(rowsData, m.getComparator(singleSortType, caloriesCollumnName));
+                                    b.invalidate();
+                                },
+                            },
+                            children: "Calories",
+                        },
+                        { children: "Calories" },
+                        { children: "Fat (g)" },
+                        { children: "Carbs (g)" },
+                    ],
+                },
+                children: {
+                    rows: rowsData.map((row) => ({
+                        cells: [
+                            { children: row.name },
+                            { children: row.calories },
+                            { children: row.fat },
+                            { children: row.carbs },
+                            { children: row.protein },
+                        ],
+                    })),
+                },
+                footer: {
+                    pagination: {
+                        rowsPerPage: 3,
+                        page: () => 0,
+                        count: rowsData.length,
+                        colSpan: 5,
+                    },
+                },
             }),
         ]),
     ];

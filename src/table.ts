@@ -2,7 +2,56 @@ import * as b from "bobril";
 import * as m from "../index";
 import * as Icon from "bobril-m-icons";
 import { IconButton } from "./iconButton";
-import { IBobrilChildren } from "bobril";
+
+export interface ITableData {
+    header?: {
+        columns: ITableHeaderCellData[];
+    };
+    footer?: {
+        pagination?: ITablePaginationData;
+    };
+    children?: b.IBobrilChildren | IRowsSettingsChildren;
+    style?: b.IBobrilStyles;
+    colSpan?: number;
+    type?: CellType;
+}
+
+interface ITableCtx extends b.BobrilCtx<ITableData> {
+    data: ITableData;
+}
+
+export const Table = b.createComponent<ITableData>({
+    render(ctx: ITableCtx, me: b.IBobrilNode) {
+        me.tag = "table";
+
+        me.children = [
+            ctx.data.header
+                ? b.withKey(
+                      TableHead({
+                          children: ctx.data.header.columns.map((column) =>
+                              TableHeaderCell({ children: column.children, sort: column.sort })
+                          ),
+                      }),
+                      "tableHead"
+                  )
+                : undefined,
+            isRowsSettingsChildren(ctx.data.children)
+                ? b.withKey(
+                      TableBody({
+                          children: ctx.data.children.rows?.map((row) =>
+                              TableRow({ children: row.cells?.map((cell) => TableCell({ children: cell.children })) })
+                          ),
+                      }),
+                      "tableBody"
+                  )
+                : b.withKey(ctx.data.children, "children"),
+            ctx.data.footer?.pagination
+                ? b.withKey(TableFooter({ children: TablePagination(ctx.data.footer.pagination) }), "footer")
+                : undefined,
+        ];
+        b.style(me, tableStyle, ctx.data.style);
+    },
+});
 
 export const enum CellType {
     Number,
@@ -14,13 +63,6 @@ export interface ITableRowData {
     isSelected?: boolean;
     children: b.IBobrilChildren;
     style?: b.IBobrilStyles;
-}
-
-interface ITableData {
-    children: b.IBobrilChildren;
-    style?: b.IBobrilStyles;
-    colSpan?: number;
-    type?: CellType;
 }
 
 interface ITableHeaderCellData {
@@ -42,10 +84,6 @@ interface ITablePaginationData {
 
 interface ITablePaginationCtx extends b.BobrilCtx<ITablePaginationData> {
     data: ITablePaginationData;
-}
-
-interface ITableCtx extends b.BobrilCtx<ITableData> {
-    data: ITableData;
 }
 
 export type TableCellSortingType = "asc" | "desc";
@@ -71,6 +109,17 @@ interface ITableSortCtx extends b.BobrilCtx<ITableSortData> {
     data: ITableSortData;
 }
 
+interface ITableCellCtx extends b.BobrilCtx<ITableCellData> {
+    data: ITableCellData;
+}
+
+interface ITableCellData {
+    children: b.IBobrilChildren;
+    style?: b.IBobrilStyles;
+    colSpan?: number;
+    type?: CellType;
+}
+
 function backButtonAction(ctx: ITablePaginationCtx) {
     ctx.data.page(ctx.data.page() - 1);
 
@@ -83,13 +132,15 @@ function nextButtonAction(ctx: ITablePaginationCtx) {
     b.invalidate(ctx);
 }
 
-export const Table = b.createComponent({
-    render(ctx: ITableCtx, me: b.IBobrilNode) {
-        me.tag = "table";
-        me.children = ctx.data.children;
-        b.style(me, tableStyle, ctx.data.style);
-    },
-});
+export interface IRowsSettingsChildren {
+    rows: {
+        cells: ITableCellData[];
+    }[];
+}
+
+function isRowsSettingsChildren(children: b.IBobrilChildren | IRowsSettingsChildren): children is IRowsSettingsChildren {
+    return (children as any).rows !== undefined;
+}
 
 export const TableHead = b.createVirtualComponent({
     render(ctx: ITableCtx, me: b.IBobrilNode) {
@@ -171,7 +222,7 @@ export const TableRow = b.createComponent({
 });
 
 export const TableCell = b.createVirtualComponent({
-    render(ctx: ITableCtx, me: b.IBobrilNode) {
+    render(ctx: ITableCellCtx, me: b.IBobrilNode) {
         me.children = { tag: "td", attrs: { colSpan: ctx.data.colSpan }, children: ctx.data.children };
         b.style(me.children, tableStyleBase, ctx.data.style, ctx.data.type === CellType.Number && numberTypeStyle);
     },
