@@ -18,9 +18,26 @@ export interface ITableData {
 
 interface ITableCtx extends b.BobrilCtx<ITableData> {
     data: ITableData;
+    headerSortActiveIndex?: number;
+    onChange(value: TableCellSortingType): void;
+    direction?: TableCellSortingType;
+    headerSortActiveSettings: ITableHeaderCellExternalSortSettings;
+    headerSortActionValue: TableCellSortingType;
+}
+
+function isTableHeaderCellExternalSortSettings(
+    settings?: ITableHeaderCellExternalSortSettings | boolean
+): settings is ITableHeaderCellExternalSortSettings {
+    return (
+        (settings as any)?.onChange !== undefined && (settings as any)?.direction !== undefined && (settings as any)?.isActive !== undefined
+    );
 }
 
 export const Table = b.createComponent<ITableData>({
+    init(ctx: ITableCtx) {
+        ctx.headerSortActiveIndex = undefined;
+        ctx.direction = undefined;
+    },
     render(ctx: ITableCtx, me: b.IBobrilNode) {
         me.tag = "table";
 
@@ -28,8 +45,34 @@ export const Table = b.createComponent<ITableData>({
             ctx.data.header
                 ? b.withKey(
                       TableHead({
-                          children: ctx.data.header.columns.map((column) =>
-                              TableHeaderCell({ children: column.children, sort: column.sort })
+                          children: ctx.data.header.columns.map((column, index) =>
+                              index === ctx.headerSortActiveIndex ||
+                              (!isTableHeaderCellExternalSortSettings(column.sort) && column.internalSort === true)
+                                  ? TableHeaderCell({
+                                        children: column.children,
+                                        sort: {
+                                            direction: ctx.direction,
+                                            isActive: ctx.headerSortActiveIndex === index,
+                                            onChange: (v) => {
+                                                ctx.headerSortActiveIndex = index;
+                                                ctx.direction = v;
+                                                b.invalidate(ctx);
+                                            },
+                                        },
+                                    })
+                                  : TableHeaderCell({
+                                        children: column.children,
+                                        sort: {
+                                            isActive: column.sort?.isActive,
+                                            direction: column.sort?.direction,
+                                            onChange: (v) => {
+                                                column.sort?.onChange(v);
+                                                ctx.headerSortActiveIndex = undefined;
+                                                ctx.direction = undefined;
+                                                b.invalidate(ctx);
+                                            },
+                                        },
+                                    })
                           ),
                       }),
                       "tableHead"
@@ -38,9 +81,25 @@ export const Table = b.createComponent<ITableData>({
             isRowsSettingsChildren(ctx.data.children)
                 ? b.withKey(
                       TableBody({
-                          children: ctx.data.children.rows?.map((row) =>
-                              TableRow({ children: row.cells?.map((cell) => TableCell({ children: cell.children })) })
-                          ),
+                          children:
+                              ctx.headerSortActiveIndex === undefined
+                                  ? ctx.data.children.rows.map((row) =>
+                                        TableRow({ children: row.cells?.map((cell) => TableCell({ children: cell.children })) })
+                                    )
+                                  : ctx.data.children.rows
+                                        ?.sort((a, b) =>
+                                            (a.cells[ctx.headerSortActiveIndex || 0].children as any) >
+                                            (b.cells[ctx.headerSortActiveIndex || 0].children as any)
+                                                ? ctx.direction === "asc"
+                                                    ? 1
+                                                    : -1
+                                                : ctx.direction === "asc"
+                                                ? -1
+                                                : 1
+                                        )
+                                        .map((row) =>
+                                            TableRow({ children: row.cells?.map((cell) => TableCell({ children: cell.children })) })
+                                        ),
                       }),
                       "tableBody"
                   )
@@ -65,8 +124,15 @@ export interface ITableRowData {
     style?: b.IBobrilStyles;
 }
 
-interface ITableHeaderCellData {
-    sort?: { onChange(value: TableCellSortingType): void; direction?: TableCellSortingType; isActive?: boolean };
+interface ITableHeaderCellExternalSortSettings {
+    onChange(value: TableCellSortingType): void;
+    direction?: TableCellSortingType;
+    isActive?: boolean;
+}
+
+export interface ITableHeaderCellData {
+    sort?: ITableHeaderCellExternalSortSettings;
+    internalSort?: boolean;
     children: b.IBobrilChildren;
     style?: b.IBobrilStyles;
     colSpan?: number;
@@ -332,8 +398,12 @@ export function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T
     const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
     stabilizedThis.sort((a, b) => {
         const order = comparator(a[0], b[0]);
-        if (order !== 0) return order;
-        return a[1] - b[1];
+        /*if (order !== 0)*/ return order;
+        // return a[1] - b[1];
     });
     return stabilizedThis.map((el) => el[0]);
+}
+
+export function customStableSort() {
+    return undefined;
 }

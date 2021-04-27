@@ -18,6 +18,9 @@ function createData(name: string, calories: number, fat: number, carbs: number, 
 }
 
 let rowsData = [
+    createData("testA", 15, 3.1, 60, 70),
+    createData("testB", 15, 3.2, 60, 70),
+    createData("testC", 15, 3, 60, 70),
     createData("Oreo", 437, 18.0, 63, 4.0),
     createData("Cupcake", 305, 3.7, 67, 4.3),
     createData("Donut", 452, 25.0, 51, 4.9),
@@ -33,8 +36,9 @@ let rowsData = [
     createData("Nougat", 360, 19.0, 9, 37.0),
 ];
 
-let singleSortType: TableCellSortingType | undefined = undefined;
+let singleSortType: TableCellSortingType | undefined = "asc";
 let collumnName: String;
+let internalSort: boolean = false;
 export function getTablePreview(): b.IBobrilChildren {
     return [
         m.Paper(
@@ -133,6 +137,14 @@ export function getTablePreview(): b.IBobrilChildren {
             })
         ),
         m.Paper({ style: { margin: 16, padding: 8 } }, [
+            m.Checkbox({
+                children: "internal sort",
+                checked: internalSort,
+                action: () => {
+                    internalSort = !internalSort;
+                    b.invalidate();
+                },
+            }),
             m.Table({
                 header: {
                     columns: [
@@ -147,20 +159,22 @@ export function getTablePreview(): b.IBobrilChildren {
                                     b.invalidate();
                                 },
                             },
+                            // internalSort: true,
                             children: ["Dessert (100g serving)"],
                         },
                         {
-                            sort: {
-                                direction: singleSortType,
-                                isActive: collumnName === caloriesCollumnName,
-                                onChange: (v) => {
-                                    collumnName = caloriesCollumnName;
-                                    singleSortType = v;
-                                    rowsData = m.stableSort(rowsData, m.getComparator(singleSortType, caloriesCollumnName));
-                                    b.invalidate();
-                                },
-                            },
+                            // sort: {
+                            //     direction: singleSortType,
+                            //     isActive: collumnName === caloriesCollumnName,
+                            //     onChange: (v) => {
+                            //         collumnName = caloriesCollumnName;
+                            //         singleSortType = v;
+                            //         rowsData = m.stableSort(rowsData, m.getComparator(singleSortType, caloriesCollumnName));
+                            //         b.invalidate();
+                            //     },
+                            // },
                             children: "Calories",
+                            internalSort: true,
                         },
                         { children: "Calories" },
                         { children: "Fat (g)" },
