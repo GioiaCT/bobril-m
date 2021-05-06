@@ -149,17 +149,17 @@ export function getTablePreview(): b.IBobrilChildren {
                 header: {
                     columns: [
                         {
-                            sort: {
-                                direction: singleSortType,
-                                isActive: collumnName === nameCollumnName,
-                                onChange: (v) => {
-                                    collumnName = nameCollumnName;
-                                    singleSortType = v;
-                                    rowsData = m.stableSort(rowsData, m.getComparator(singleSortType, nameCollumnName));
-                                    b.invalidate();
-                                },
-                            },
-                            // internalSort: true,
+                            // sort: {
+                            //     direction: singleSortType,
+                            //     isActive: collumnName === nameCollumnName,
+                            //     onChange: (v) => {
+                            //         collumnName = nameCollumnName;
+                            //         singleSortType = v;
+                            //         rowsData = m.stableSort(rowsData, m.getComparator(singleSortType, nameCollumnName));
+                            //         b.invalidate();
+                            //     },
+                            // },
+                            internalSort: true,
                             children: ["Dessert (100g serving)"],
                         },
                         {

@@ -54,8 +54,8 @@ export const Table = b.createComponent<ITableData>({
                                             direction: ctx.direction,
                                             isActive: ctx.headerSortActiveIndex === index,
                                             onChange: (v) => {
+                                                ctx.headerSortActiveIndex === index ? (ctx.direction = v) : (ctx.direction = "asc");
                                                 ctx.headerSortActiveIndex = index;
-                                                ctx.direction = v;
                                                 b.invalidate(ctx);
                                             },
                                         },
@@ -124,8 +124,8 @@ export interface ITableRowData {
     style?: b.IBobrilStyles;
 }
 
-interface ITableHeaderCellExternalSortSettings {
-    onChange(value: TableCellSortingType): void;
+export interface ITableHeaderCellExternalSortSettings {
+    onChange(value?: TableCellSortingType): void;
     direction?: TableCellSortingType;
     isActive?: boolean;
 }
@@ -156,7 +156,7 @@ export type TableCellSortingType = "asc" | "desc";
 
 interface IHeaderCellCtx extends b.BobrilCtx<ITableHeaderCellData> {
     active: boolean;
-    defaultDirection: TableCellSortingType;
+    defaultDirection?: TableCellSortingType;
     data: ITableHeaderCellData;
 }
 
@@ -167,7 +167,7 @@ interface ITableRowCtx extends b.BobrilCtx<ITableRowData> {
 
 interface ITableSortData {
     children?: b.IBobrilChildren;
-    direction: TableCellSortingType;
+    direction?: TableCellSortingType;
     style?: b.IBobrilStyles;
 }
 
@@ -246,17 +246,17 @@ export const TableHeaderCell = b.createComponent<ITableHeaderCellData>({
     },
 });
 
-function toggleSort(direction?: TableCellSortingType): TableCellSortingType {
-    return direction === "desc" ? "asc" : "desc";
+function toggleSort(direction?: TableCellSortingType): TableCellSortingType | undefined {
+    return direction === "asc" ? "desc" : "asc";
 }
 
 export const TableHeaderSort = b.createComponent<ITableSortData>({
     render(ctx: ITableSortCtx, me: b.IBobrilNode) {
-        b.style(me, {
-            cssFloat: "left",
-        });
+        var direction = ctx.data.direction;
+        b.style(me, ctx.data.style, { display: "inline" });
         me.children = {
-            children: ctx.data.direction === "asc" ? Icon.navigationArrowUpward() : Icon.navigationArrowDownward(),
+            children:
+                direction === "asc" ? Icon.navigationArrowUpward() : direction === "desc" ? Icon.navigationArrowDownward() : undefined,
         };
     },
 });
